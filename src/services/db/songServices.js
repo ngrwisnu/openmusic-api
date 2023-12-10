@@ -12,21 +12,10 @@ class SongServices {
   async addSong({ title, year, genre, performer, duration, albumId }) {
     const id = nanoid();
     const createdAt = new Date().toISOString();
-    const updatedAt = createdAt;
 
     const query = {
-      text: "INSERT INTO songs(id, title, year, genre, performer, duration, album_id, created_at, updated_at) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id",
-      values: [
-        id,
-        title,
-        year,
-        genre,
-        performer,
-        duration,
-        albumId,
-        createdAt,
-        updatedAt,
-      ],
+      text: "INSERT INTO songs(id, title, year, genre, performer, duration, album_id, created_at, updated_at) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $8) RETURNING id",
+      values: [id, title, year, genre, performer, duration, albumId, createdAt],
     };
 
     const result = await this._pool.query(query);
@@ -112,6 +101,17 @@ class SongServices {
     const result = await this._pool.query(query);
 
     if (!result.rows.length) throw new NotFoundError("Song not found!");
+  }
+
+  async getSongsByAlbumId(albumId) {
+    const query = {
+      text: "SELECT songs.id, songs.title, songs.performer FROM songs WHERE album_id = $1",
+      values: [albumId],
+    };
+
+    const songs = await this._pool.query(query);
+
+    return songs.rows;
   }
 }
 

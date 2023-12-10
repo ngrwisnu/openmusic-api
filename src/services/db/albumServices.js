@@ -2,11 +2,13 @@ import { nanoid } from "nanoid";
 import Postgre from "pg";
 import InvariantError from "../../middleware/error/InvariantError.js";
 import NotFoundError from "../../middleware/error/NotFoundError.js";
+import SongServices from "./songServices.js";
 const { Pool } = Postgre;
 
 class AlbumServices {
   constructor() {
     this._pool = new Pool();
+    this._songService = new SongServices();
   }
 
   async addAlbum({ name, year }) {
@@ -37,16 +39,11 @@ class AlbumServices {
 
     if (!album.rows.length) throw new NotFoundError("Albums not found!");
 
-    const songQuery = {
-      text: "SELECT songs.id, songs.title, songs.performer FROM songs WHERE album_id = $1",
-      values: [album.rows[0].id],
-    };
-
-    const songs = await this._pool.query(songQuery);
+    const songs = await this._songService.getSongsByAlbumId(album.rows[0].id);
 
     return {
       ...album.rows[0],
-      songs: songs.rows,
+      songs,
     };
   }
 
