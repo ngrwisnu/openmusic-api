@@ -4,9 +4,9 @@ class SongHandler {
     this._validator = validator;
   }
 
-  postSongHandler(request, h) {
+  async postSongHandler(request, h) {
     this._validator.validateSongPayload(request.payload);
-    const songId = this._service.addSong(request.payload);
+    const songId = await this._service.addSong(request.payload);
 
     const response = h.response({
       status: "success",
@@ -19,13 +19,19 @@ class SongHandler {
     return response;
   }
 
-  getSongsHandler(request, h) {
-    const songs = this._service.getSongs();
+  async getSongsHandler(request, h) {
+    const songs = await this._service.getSongs(request.query);
+
+    const convertedOutput = songs.map((song) => ({
+      id: song.id,
+      title: song.title,
+      performer: song.performer,
+    }));
 
     const response = h.response({
       status: "success",
       data: {
-        songs,
+        songs: convertedOutput,
       },
     });
 
@@ -33,10 +39,10 @@ class SongHandler {
     return response;
   }
 
-  getSongByIdHandler(request, h) {
+  async getSongByIdHandler(request, h) {
     const { id } = request.params;
 
-    const song = this._service.getSongById(id);
+    const song = await this._service.getSongById(id);
 
     const response = h.response({
       status: "success",
@@ -49,11 +55,11 @@ class SongHandler {
     return response;
   }
 
-  putSongByIdHandler(request, h) {
+  async putSongByIdHandler(request, h) {
     this._validator.validateSongPayload(request.payload);
     const { id } = request.params;
 
-    this._service.editSongById(id, request.payload);
+    await this._service.editSongById(id, request.payload);
 
     const response = h.response({
       status: "success",
@@ -64,10 +70,10 @@ class SongHandler {
     return response;
   }
 
-  deleteSongByIdHandler(request, h) {
+  async deleteSongByIdHandler(request, h) {
     const { id } = request.params;
 
-    this._service.deleteSongById(id);
+    await this._service.deleteSongById(id);
 
     const response = h.response({
       status: "success",

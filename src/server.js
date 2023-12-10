@@ -14,10 +14,7 @@ const init = async () => {
 
   const server = Hapi.server({
     port: process.env.PORT,
-    host: process.env.NODE_ENV !== "production" ? process.env.HOST : "0.0.0.0",
-    routes: {
-      origin: ["*"],
-    },
+    host: process.env.HOST,
   });
 
   await server.register([

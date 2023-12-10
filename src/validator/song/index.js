@@ -1,4 +1,4 @@
-import { SongPayloadSchema } from "./schema";
+import { SongPayloadSchema } from "./schema.js";
 import InvariantError from "../../middleware/error/InvariantError.js";
 
 const SongValidator = {
