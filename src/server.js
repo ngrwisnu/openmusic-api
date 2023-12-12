@@ -10,11 +10,16 @@ import AlbumServices from "./services/db/albumServices.js";
 import SongServices from "./services/db/songServices.js";
 import userPlugin from "./api/user/index.js";
 import UserServices from "./services/db/userServices.js";
+import authPlugin from "./api/auth/index.js";
+import AuthServices from "./services/db/authServices.js";
+import AuthValidator from "./validator/auth/index.js";
+import tokenGenerator from "./generator/token.js";
 
 const init = async () => {
   const albumServices = new AlbumServices();
   const songServices = new SongServices();
   const userServices = new UserServices();
+  const authServices = new AuthServices();
 
   const server = Hapi.server({
     port: process.env.PORT,
@@ -41,6 +46,15 @@ const init = async () => {
       options: {
         service: userServices,
         validator: UserValidator,
+      },
+    },
+    {
+      plugin: authPlugin,
+      options: {
+        authService: authServices,
+        userService: userServices,
+        tokenGenerator,
+        validator: AuthValidator,
       },
     },
   ]);

@@ -2,6 +2,7 @@ import { nanoid } from "nanoid";
 import Postgre from "pg";
 import bcrypt from "bcrypt";
 import InvariantError from "../../middleware/error/InvariantError.js";
+import AuthenticationError from "../../middleware/error/AuthenticationError.js";
 const { Pool } = Postgre;
 
 class UserServices {
@@ -40,6 +41,27 @@ class UserServices {
 
     if (result.rows.length > 0)
       throw new InvariantError("Username is already exist!");
+  }
+
+  async verifyUserCredentials(username, password) {
+    const query = {
+      text: "SELECT id, password FROM users WHERE username=$1",
+      values: [username],
+    };
+
+    const result = await this._pool.query(query);
+
+    if (!result.rows.length)
+      throw new AuthenticationError("Username or password is wrong!");
+
+    const user = result.rows[0];
+
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch)
+      throw new AuthenticationError("Username or password is wrong!");
+
+    return user.id;
   }
 }
 
