@@ -14,16 +14,43 @@ import authPlugin from "./api/auth/index.js";
 import AuthServices from "./services/db/authServices.js";
 import AuthValidator from "./validator/auth/index.js";
 import tokenGenerator from "./generator/token.js";
+import Jwt from "@hapi/jwt";
+import playlistPlugin from "./api/playlist/index.js";
+import PlaylistServices from "./services/db/playlistServices.js";
+import PlaylistValidator from "./validator/playlist/index.js";
 
 const init = async () => {
   const albumServices = new AlbumServices();
   const songServices = new SongServices();
   const userServices = new UserServices();
   const authServices = new AuthServices();
+  const playlistServices = new PlaylistServices();
 
   const server = Hapi.server({
     port: process.env.PORT,
     host: process.env.HOST,
+  });
+
+  await server.register([
+    {
+      plugin: Jwt,
+    },
+  ]);
+
+  server.auth.strategy("openmusic_jwt", "jwt", {
+    keys: process.env.ACCESS_TOKEN_KEY,
+    verify: {
+      aud: false,
+      iss: false,
+      sub: false,
+      maxAgeSec: process.env.ACCESS_TOKEN_AGE,
+    },
+    validate: (artifacts) => ({
+      isValid: true,
+      credentials: {
+        uid: artifacts.decoded.payload.uid,
+      },
+    }),
   });
 
   await server.register([
@@ -55,6 +82,14 @@ const init = async () => {
         userService: userServices,
         tokenGenerator,
         validator: AuthValidator,
+      },
+    },
+    {
+      plugin: playlistPlugin,
+      options: {
+        service: playlistServices,
+        songServices,
+        validator: PlaylistValidator,
       },
     },
   ]);
