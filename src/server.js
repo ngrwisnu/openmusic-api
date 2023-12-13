@@ -18,13 +18,17 @@ import Jwt from "@hapi/jwt";
 import playlistPlugin from "./api/playlist/index.js";
 import PlaylistServices from "./services/db/playlistServices.js";
 import PlaylistValidator from "./validator/playlist/index.js";
+import CollaborationValidator from "./validator/collaboration/index.js";
+import CollabServices from "./services/db/collabServices.js";
+import collabPlugin from "./api/collab/index.js";
 
 const init = async () => {
   const albumServices = new AlbumServices();
   const songServices = new SongServices();
   const userServices = new UserServices();
   const authServices = new AuthServices();
-  const playlistServices = new PlaylistServices();
+  const collabServices = new CollabServices();
+  const playlistServices = new PlaylistServices(collabServices);
 
   const server = Hapi.server({
     port: process.env.PORT,
@@ -90,6 +94,15 @@ const init = async () => {
         service: playlistServices,
         songServices,
         validator: PlaylistValidator,
+      },
+    },
+    {
+      plugin: collabPlugin,
+      options: {
+        service: collabServices,
+        playlistService: playlistServices,
+        userService: userServices,
+        validator: CollaborationValidator,
       },
     },
   ]);

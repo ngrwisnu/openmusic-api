@@ -6,8 +6,9 @@ import AuthorizationError from "../../middleware/error/AuthorizationError.js";
 const { Pool } = Postgre;
 
 class PlaylistServices {
-  constructor() {
+  constructor(collabServices) {
     this._pool = new Pool();
+    this._collabService = collabServices;
   }
 
   async addPlaylist(name, ownerId) {
@@ -29,7 +30,7 @@ class PlaylistServices {
 
   async getPlaylists(ownerId) {
     const query = {
-      text: "SELECT playlists.id, playlists.name, playlists.owner AS username FROM playlists WHERE owner=$1",
+      text: "SELECT playlists.id, playlists.name, users.username FROM playlists LEFT JOIN collaborations ON playlists.id = collaborations.playlist_id JOIN users ON playlists.owner = users.id WHERE playlists.owner=$1 OR collaborations.couser_id=$1",
       values: [ownerId],
     };
 
@@ -127,6 +128,20 @@ class PlaylistServices {
     if (!result.rows.length) throw new NotFoundError("Playlist doesn't exist!");
 
     return result.rows[0];
+  }
+
+  async verifyPlaylistAccess(playlistId, userId) {
+    try {
+      await this.verifyPlaylistOwner(playlistId, userId);
+    } catch (error) {
+      if (error instanceof NotFoundError) throw error;
+
+      try {
+        await this._collabService.verifyCollaborator(playlistId, userId);
+      } catch {
+        throw error;
+      }
+    }
   }
 }
 

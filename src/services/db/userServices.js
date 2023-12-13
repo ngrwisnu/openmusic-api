@@ -3,6 +3,7 @@ import Postgre from "pg";
 import bcrypt from "bcrypt";
 import InvariantError from "../../middleware/error/InvariantError.js";
 import AuthenticationError from "../../middleware/error/AuthenticationError.js";
+import NotFoundError from "../../middleware/error/NotFoundError.js";
 const { Pool } = Postgre;
 
 class UserServices {
@@ -62,6 +63,17 @@ class UserServices {
       throw new AuthenticationError("Username or password is wrong!");
 
     return user.id;
+  }
+
+  async isUserExist(userId) {
+    const query = {
+      text: "SELECT * FROM users WHERE id=$1",
+      values: [userId],
+    };
+
+    const result = await this._pool.query(query);
+
+    if (!result.rows.length) throw new NotFoundError("User doesn't exist!");
   }
 }
 
