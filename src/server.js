@@ -23,8 +23,8 @@ import CollabServices from "./services/db/collabServices.js";
 import collabPlugin from "./api/collab/index.js";
 
 const init = async () => {
-  const albumServices = new AlbumServices();
   const songServices = new SongServices();
+  const albumServices = new AlbumServices(songServices);
   const userServices = new UserServices();
   const authServices = new AuthServices();
   const collabServices = new CollabServices();

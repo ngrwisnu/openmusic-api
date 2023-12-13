@@ -1,14 +1,13 @@
 import { nanoid } from "nanoid";
 import InvariantError from "../../middleware/error/InvariantError.js";
 import NotFoundError from "../../middleware/error/NotFoundError.js";
-import SongServices from "./songServices.js";
 import Postgre from "pg";
 const { Pool } = Postgre;
 
 class AlbumServices {
-  constructor() {
+  constructor(songService) {
     this._pool = new Pool();
-    this._songService = new SongServices();
+    this._songService = songService;
   }
 
   async addAlbum({ name, year }) {

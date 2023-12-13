@@ -3,6 +3,7 @@ import Postgre from "pg";
 import InvariantError from "../../middleware/error/InvariantError.js";
 import NotFoundError from "../../middleware/error/NotFoundError.js";
 import AuthorizationError from "../../middleware/error/AuthorizationError.js";
+import { mapActivityOutput } from "../../utils/mapDBToModel.js";
 const { Pool } = Postgre;
 
 class PlaylistServices {
@@ -50,8 +51,10 @@ class PlaylistServices {
     if (!result.rows.length) throw new NotFoundError("Playlist not found!");
   }
 
-  async addSongToPlaylist(playlistId, songId) {
+  async addSongToPlaylist(playlistId, songId, uid) {
     const playlistSongId = `plsong-${nanoid(16)}`;
+    const activityId = `act-${nanoid(16)}`;
+    const createdAt = new Date().toISOString();
 
     const query = {
       text: "INSERT INTO playlist_songs(id, playlist_id, song_id) VALUES($1, $2, $3) RETURNING id",
@@ -62,6 +65,13 @@ class PlaylistServices {
 
     if (!result.rows.length)
       throw new InvariantError("Failed adding song to Playlist!");
+
+    const activityQuery = {
+      text: "INSERT INTO playlist_activities VALUES($1, $2, $3, $4, $5, $6, $6)",
+      values: [activityId, playlistId, songId, uid, "ADD", createdAt],
+    };
+
+    await this._pool.query(activityQuery);
 
     return await this.getPlaylistById(playlistId);
   }
@@ -87,7 +97,10 @@ class PlaylistServices {
     };
   }
 
-  async deleteSongFromPlaylist(playlistId, songId) {
+  async deleteSongFromPlaylist(playlistId, songId, uid) {
+    const activityId = `act-${nanoid(16)}`;
+    const createdAt = new Date().toISOString();
+
     const query = {
       text: "DELETE FROM playlist_songs WHERE playlist_id=$1 AND song_id=$2 RETURNING id",
       values: [playlistId, songId],
@@ -98,7 +111,32 @@ class PlaylistServices {
     if (!result.rows.length)
       throw new InvariantError("Failed deleting song from playlist.");
 
+    const activityQuery = {
+      text: "INSERT INTO playlist_activities VALUES($1, $2, $3, $4, $5, $6, $6)",
+      values: [activityId, playlistId, songId, uid, "DELETE", createdAt],
+    };
+
+    await this._pool.query(activityQuery);
+
     return await this.getPlaylistById(playlistId);
+  }
+
+  async getPlaylistActivities(playlistId) {
+    const query = {
+      text: "SELECT songs.title, users.username, playlist_activities.* FROM playlist_activities LEFT JOIN songs ON playlist_activities.song_id = songs.id LEFT JOIN users ON playlist_activities.user_id = users.id WHERE playlist_id=$1",
+      values: [playlistId],
+    };
+
+    const result = await this._pool.query(query);
+
+    if (!result.rows.length) throw new NotFoundError("Playlist not found!");
+
+    const mappedOutput = result.rows.map(mapActivityOutput);
+
+    return {
+      playlistId,
+      activities: mappedOutput,
+    };
   }
 
   async verifyPlaylistOwner(playlistId, ownerId) {
