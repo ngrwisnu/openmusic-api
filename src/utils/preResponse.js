@@ -18,7 +18,7 @@ const preResponse = (request, h) => {
 
     const newResponse = h.response({
       status: "error",
-      message: "Internal Server Error!", //NOTE: use response.message for debugging
+      message: response.message, //NOTE: use response.message for debugging
     });
 
     newResponse.code(500);

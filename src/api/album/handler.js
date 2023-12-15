@@ -1,7 +1,9 @@
 class AlbumHandler {
-  constructor(service, validator) {
+  constructor(service, storageService, validator, uploadValidator) {
     this._service = service;
+    this._storageService = storageService;
     this._validator = validator;
+    this._uploadValidator = uploadValidator;
   }
 
   async postAlbumHandler(request, h) {
@@ -62,6 +64,30 @@ class AlbumHandler {
     });
 
     response.code(200);
+    return response;
+  }
+
+  async postAlbumCoverHandler(request, h) {
+    const { cover } = request.payload;
+    const { id } = request.params;
+
+    this._uploadValidator.validateImageHeaders(cover.hapi.headers);
+
+    const fileName = await this._storageService.writeFile(
+      cover,
+      cover.hapi.filename
+    );
+
+    const fileLocation = `http://${process.env.HOST}:${process.env.PORT}/assets/upload/images/${fileName}`;
+
+    await this._service.updateAlbumCover(id, fileLocation);
+
+    const response = h.response({
+      status: "success",
+      message: "Success added album cover",
+    });
+
+    response.code(201);
     return response;
   }
 }

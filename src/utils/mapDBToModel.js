@@ -4,3 +4,10 @@ export const mapActivityOutput = (data) => ({
   action: data.action.toLowerCase(),
   time: data.created_at,
 });
+
+export const mappedAlbumOutput = (data) => ({
+  id: data.id,
+  name: data.name,
+  year: data.year,
+  coverUrl: data.cover,
+});

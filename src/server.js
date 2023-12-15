@@ -21,6 +21,12 @@ import PlaylistValidator from "./validator/playlist/index.js";
 import CollaborationValidator from "./validator/collaboration/index.js";
 import CollabServices from "./services/db/collabServices.js";
 import collabPlugin from "./api/collab/index.js";
+import UploadValidator from "./validator/uploads/index.js";
+import StorageServices from "./services/storage/storageServices.js";
+import path from "path";
+import { __dirname } from "./config/dirname.js";
+import Inert from "@hapi/inert";
+import uploadPlugin from "./api/upload/index.js";
 
 const init = async () => {
   const songServices = new SongServices();
@@ -29,6 +35,9 @@ const init = async () => {
   const authServices = new AuthServices();
   const collabServices = new CollabServices();
   const playlistServices = new PlaylistServices(collabServices);
+  const storageServices = new StorageServices(
+    path.resolve(__dirname, "../../assets/upload/images")
+  );
 
   const server = Hapi.server({
     port: process.env.PORT,
@@ -38,6 +47,9 @@ const init = async () => {
   await server.register([
     {
       plugin: Jwt,
+    },
+    {
+      plugin: Inert,
     },
   ]);
 
@@ -62,7 +74,9 @@ const init = async () => {
       plugin: albumPlugin,
       options: {
         service: albumServices,
+        storageService: storageServices,
         validator: AlbumValidator,
+        uploadValidator: UploadValidator,
       },
     },
     {
@@ -104,6 +118,9 @@ const init = async () => {
         userService: userServices,
         validator: CollaborationValidator,
       },
+    },
+    {
+      plugin: uploadPlugin,
     },
   ]);
 

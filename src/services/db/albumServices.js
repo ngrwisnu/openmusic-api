@@ -2,6 +2,7 @@ import { nanoid } from "nanoid";
 import InvariantError from "../../middleware/error/InvariantError.js";
 import NotFoundError from "../../middleware/error/NotFoundError.js";
 import Postgre from "pg";
+import { mappedAlbumOutput } from "../../utils/mapDBToModel.js";
 const { Pool } = Postgre;
 
 class AlbumServices {
@@ -30,7 +31,7 @@ class AlbumServices {
 
   async getAlbumById(id) {
     const query = {
-      text: "SELECT albums.id, albums.name, albums.year FROM albums WHERE id=$1",
+      text: "SELECT albums.id, albums.name, albums.year, albums.cover FROM albums WHERE id=$1",
       values: [id],
     };
 
@@ -40,8 +41,10 @@ class AlbumServices {
 
     const songs = await this._songService.getSongsByAlbumId(album.rows[0].id);
 
+    const mappedAlbum = mappedAlbumOutput(album.rows[0]);
+
     return {
-      ...album.rows[0],
+      ...mappedAlbum,
       songs,
     };
   }
@@ -68,6 +71,19 @@ class AlbumServices {
     const result = await this._pool.query(query);
 
     if (!result.rows.length) throw new NotFoundError("Album not found!");
+  }
+
+  async updateAlbumCover(albumId, filename) {
+    const updatedAt = new Date().toISOString();
+
+    const query = {
+      text: "UPDATE albums SET cover=$2, updated_at=$3 WHERE id=$1 RETURNING id",
+      values: [albumId, filename, updatedAt],
+    };
+
+    const result = await this._pool.query(query);
+
+    if (!result.rowCount) throw new NotFoundError("Album not found!");
   }
 }
 
