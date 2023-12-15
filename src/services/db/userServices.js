@@ -75,6 +75,17 @@ class UserServices {
 
     if (!result.rows.length) throw new NotFoundError("User doesn't exist!");
   }
+
+  async isUserAlreadyLikedTheAlbum(userId) {
+    const query = {
+      text: "SELECT * FROM album_likes WHERE user_id=$1",
+      values: [userId],
+    };
+
+    const result = await this._pool.query(query);
+
+    return !!result.rowCount;
+  }
 }
 
 export default UserServices;

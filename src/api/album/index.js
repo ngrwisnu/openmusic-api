@@ -6,11 +6,12 @@ const albumPlugin = {
   version: "1.0.0",
   register: async (
     server,
-    { service, storageService, validator, uploadValidator }
+    { service, storageService, userService, validator, uploadValidator }
   ) => {
     const albumHandler = new AlbumHandler(
       service,
       storageService,
+      userService,
       validator,
       uploadValidator
     );

@@ -75,6 +75,7 @@ const init = async () => {
       options: {
         service: albumServices,
         storageService: storageServices,
+        userService: userServices,
         validator: AlbumValidator,
         uploadValidator: UploadValidator,
       },

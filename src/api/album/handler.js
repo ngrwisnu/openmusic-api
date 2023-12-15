@@ -1,7 +1,16 @@
+import InvariantError from "../../middleware/error/InvariantError.js";
+
 class AlbumHandler {
-  constructor(service, storageService, validator, uploadValidator) {
+  constructor(
+    service,
+    storageService,
+    userService,
+    validator,
+    uploadValidator
+  ) {
     this._service = service;
     this._storageService = storageService;
+    this._userService = userService;
     this._validator = validator;
     this._uploadValidator = uploadValidator;
   }
@@ -88,6 +97,70 @@ class AlbumHandler {
     });
 
     response.code(201);
+    return response;
+  }
+
+  async postAlbumLikeHandler(request, h) {
+    const { id } = request.params;
+    const { uid } = request.auth.credentials;
+
+    const album = await this._service.getAlbumById(id);
+
+    const isUserAlreadyLiked =
+      await this._userService.isUserAlreadyLikedTheAlbum(uid);
+
+    if (isUserAlreadyLiked)
+      throw new InvariantError("You already like the album!");
+
+    await this._service.addAlbumLike(uid, id);
+
+    const response = h.response({
+      status: "success",
+      message: `You've just liked ${album.name}`,
+    });
+
+    response.code(201);
+    return response;
+  }
+
+  async deleteAlbumLikeHandler(request, h) {
+    const { id } = request.params;
+    const { uid } = request.auth.credentials;
+
+    const album = await this._service.getAlbumById(id);
+
+    const isUserAlreadyLiked =
+      await this._userService.isUserAlreadyLikedTheAlbum(uid);
+
+    if (!isUserAlreadyLiked)
+      throw new InvariantError("You haven't liked the album!");
+
+    await this._service.deleteAlbumLike(uid, id);
+
+    const response = h.response({
+      status: "success",
+      message: `You've just disliked ${album.name}`,
+    });
+
+    response.code(200);
+    return response;
+  }
+
+  async getAlbumLikesHandler(request, h) {
+    const { id } = request.params;
+
+    await this._service.getAlbumById(id);
+
+    const likes = await this._service.getAlbumLikes(id);
+
+    const response = h.response({
+      status: "success",
+      data: {
+        likes,
+      },
+    });
+
+    response.code(200);
     return response;
   }
 }
