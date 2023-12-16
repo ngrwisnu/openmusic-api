@@ -31,6 +31,7 @@ import CacheServices from "./services/redis/cacheServices.js";
 import exportPlugin from "./api/export/index.js";
 import ProducerServices from "./services/rabbitmq/producerServices.js";
 import ExportValidator from "./validator/export/index.js";
+import config from "./config/env.js";
 
 const init = async () => {
   const cacheService = new CacheServices();
@@ -45,8 +46,8 @@ const init = async () => {
   );
 
   const server = Hapi.server({
-    port: process.env.PORT,
-    host: process.env.HOST,
+    port: config.app.port,
+    host: config.app.host,
   });
 
   await server.register([
@@ -59,12 +60,12 @@ const init = async () => {
   ]);
 
   server.auth.strategy("openmusic_jwt", "jwt", {
-    keys: process.env.ACCESS_TOKEN_KEY,
+    keys: config.tk.accessTokenKey,
     verify: {
       aud: false,
       iss: false,
       sub: false,
-      maxAgeSec: process.env.ACCESS_TOKEN_AGE,
+      maxAgeSec: config.tk.accessTokenAge,
     },
     validate: (artifacts) => ({
       isValid: true,

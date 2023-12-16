@@ -1,3 +1,4 @@
+import config from "../../config/env.js";
 import InvariantError from "../../middleware/error/InvariantError.js";
 
 class AlbumHandler {
@@ -87,7 +88,7 @@ class AlbumHandler {
       cover.hapi.filename
     );
 
-    const fileLocation = `http://${process.env.HOST}:${process.env.PORT}/assets/upload/images/${fileName}`;
+    const fileLocation = `http://${config.app.host}:${config.app.port}/assets/upload/images/${fileName}`;
 
     await this._service.updateAlbumCover(id, fileLocation);
 
