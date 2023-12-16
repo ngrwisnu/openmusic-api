@@ -28,6 +28,9 @@ import { __dirname } from "./config/dirname.js";
 import Inert from "@hapi/inert";
 import uploadPlugin from "./api/upload/index.js";
 import CacheServices from "./services/redis/cacheServices.js";
+import exportPlugin from "./api/export/index.js";
+import ProducerServices from "./services/rabbitmq/producerServices.js";
+import ExportValidator from "./validator/export/index.js";
 
 const init = async () => {
   const cacheService = new CacheServices();
@@ -124,6 +127,14 @@ const init = async () => {
     },
     {
       plugin: uploadPlugin,
+    },
+    {
+      plugin: exportPlugin,
+      options: {
+        service: ProducerServices,
+        playlistService: playlistServices,
+        validator: ExportValidator,
+      },
     },
   ]);
 
