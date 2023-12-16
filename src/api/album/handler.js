@@ -156,11 +156,12 @@ class AlbumHandler {
     const response = h.response({
       status: "success",
       data: {
-        likes,
+        likes: likes.data,
       },
     });
 
     response.code(200);
+    response.header("X-Data-Source", likes.cache);
     return response;
   }
 }

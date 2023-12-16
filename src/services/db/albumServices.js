@@ -6,9 +6,10 @@ import { mappedAlbumOutput } from "../../utils/mapDBToModel.js";
 const { Pool } = Postgre;
 
 class AlbumServices {
-  constructor(songService) {
+  constructor(songService, cacheService) {
     this._pool = new Pool();
     this._songService = songService;
+    this._cacheService = cacheService;
   }
 
   async addAlbum({ name, year }) {
@@ -97,6 +98,8 @@ class AlbumServices {
     const result = await this._pool.query(query);
 
     if (!result.rowCount) throw new InvariantError("Couldn't like the album!");
+
+    await this._cacheService.delete(`album:${albumId}`);
   }
 
   async deleteAlbumLike(userId, albumId) {
@@ -109,17 +112,36 @@ class AlbumServices {
 
     if (!result.rowCount)
       throw new InvariantError("Couldn't dislike the album!");
+
+    await this._cacheService.delete(`album:${albumId}`);
   }
 
   async getAlbumLikes(albumId) {
-    const query = {
-      text: "SELECT COUNT(user_id) AS likes FROM album_likes WHERE album_id=$1",
-      values: [albumId],
-    };
+    try {
+      const result = await this._cacheService.get(`album:${albumId}`);
 
-    const result = await this._pool.query(query);
+      return {
+        data: +JSON.parse(result),
+        cache: "cache",
+      };
+    } catch (error) {
+      const query = {
+        text: "SELECT COUNT(user_id) AS likes FROM album_likes WHERE album_id=$1",
+        values: [albumId],
+      };
 
-    return +result.rows[0].likes;
+      const result = await this._pool.query(query);
+
+      await this._cacheService.set(
+        `album:${albumId}`,
+        JSON.stringify(result.rows[0].likes)
+      );
+
+      return {
+        data: +result.rows[0].likes,
+        cache: "no-cache",
+      };
+    }
   }
 }
 

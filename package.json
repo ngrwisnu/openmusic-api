@@ -22,7 +22,8 @@
     "joi": "^17.11.0",
     "nanoid": "^5.0.4",
     "node-pg-migrate": "^6.2.2",
-    "pg": "^8.11.3"
+    "pg": "^8.11.3",
+    "redis": "^4.6.11"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.23.5",

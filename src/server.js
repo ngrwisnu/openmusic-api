@@ -27,10 +27,12 @@ import path from "path";
 import { __dirname } from "./config/dirname.js";
 import Inert from "@hapi/inert";
 import uploadPlugin from "./api/upload/index.js";
+import CacheServices from "./services/redis/cacheServices.js";
 
 const init = async () => {
+  const cacheService = new CacheServices();
   const songServices = new SongServices();
-  const albumServices = new AlbumServices(songServices);
+  const albumServices = new AlbumServices(songServices, cacheService);
   const userServices = new UserServices();
   const authServices = new AuthServices();
   const collabServices = new CollabServices();
