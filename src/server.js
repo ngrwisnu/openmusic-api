@@ -35,12 +35,12 @@ import config from "./config/env.js";
 
 const init = async () => {
   const cacheService = new CacheServices();
-  const songServices = new SongServices();
+  const songServices = new SongServices(cacheService);
   const albumServices = new AlbumServices(songServices, cacheService);
   const userServices = new UserServices();
   const authServices = new AuthServices();
   const collabServices = new CollabServices();
-  const playlistServices = new PlaylistServices(collabServices);
+  const playlistServices = new PlaylistServices(collabServices, cacheService);
   const storageServices = new StorageServices(
     path.resolve(__dirname, "../../assets/upload/images")
   );

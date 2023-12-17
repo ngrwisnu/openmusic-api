@@ -37,12 +37,18 @@ class AlbumHandler {
 
     const album = await this._service.getAlbumById(id);
 
+    console.log(album);
+
     const response = h.response({
       status: "success",
       data: {
-        album,
+        album: album,
       },
     });
+
+    // if (album.isCache) {
+    //   response.header("X-Data-Source", "cache");
+    // }
 
     response.code(200);
     return response;
@@ -117,7 +123,7 @@ class AlbumHandler {
 
     const response = h.response({
       status: "success",
-      message: `You've just liked ${album.name}`,
+      message: `You've just liked ${album.data.name}`,
     });
 
     response.code(201);
@@ -140,7 +146,7 @@ class AlbumHandler {
 
     const response = h.response({
       status: "success",
-      message: `You've just disliked ${album.name}`,
+      message: `You've just disliked ${album.data.name}`,
     });
 
     response.code(200);
@@ -161,8 +167,11 @@ class AlbumHandler {
       },
     });
 
+    if (likes.isCache) {
+      response.header("X-Data-Source", "cache");
+    }
+
     response.code(200);
-    response.header("X-Data-Source", likes.cache);
     return response;
   }
 }

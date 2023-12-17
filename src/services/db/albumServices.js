@@ -27,6 +27,8 @@ class AlbumServices {
     if (!result.rows[0].id)
       throw new InvariantError("Failed adding new album!");
 
+    await this._cacheService.delete(`album:${result.rows[0].id}`);
+
     return result.rows[0].id;
   }
 
@@ -45,7 +47,7 @@ class AlbumServices {
     const mappedAlbum = mappedAlbumOutput(album.rows[0]);
 
     return {
-      ...mappedAlbum,
+      ...album.rows[0],
       songs,
     };
   }
@@ -61,6 +63,8 @@ class AlbumServices {
     const result = await this._pool.query(query);
 
     if (!result.rows.length) throw new NotFoundError("Album not found!");
+
+    await this._cacheService.delete([`album:${id}`, `album_likes:${id}`]);
   }
 
   async deleteAlbumById(id) {
@@ -72,6 +76,8 @@ class AlbumServices {
     const result = await this._pool.query(query);
 
     if (!result.rows.length) throw new NotFoundError("Album not found!");
+
+    await this._cacheService.delete([`album:${id}`, `album_likes:${id}`]);
   }
 
   async updateAlbumCover(albumId, filename) {
@@ -85,6 +91,11 @@ class AlbumServices {
     const result = await this._pool.query(query);
 
     if (!result.rowCount) throw new NotFoundError("Album not found!");
+
+    await this._cacheService.delete([
+      `album:${albumId}`,
+      `album_likes:${albumId}`,
+    ]);
   }
 
   async addAlbumLike(userId, albumId) {
@@ -99,7 +110,7 @@ class AlbumServices {
 
     if (!result.rowCount) throw new InvariantError("Couldn't like the album!");
 
-    await this._cacheService.delete(`album:${albumId}`);
+    await this._cacheService.delete(`album_likes:${albumId}`);
   }
 
   async deleteAlbumLike(userId, albumId) {
@@ -113,16 +124,16 @@ class AlbumServices {
     if (!result.rowCount)
       throw new InvariantError("Couldn't dislike the album!");
 
-    await this._cacheService.delete(`album:${albumId}`);
+    await this._cacheService.delete(`album_likes:${albumId}`);
   }
 
   async getAlbumLikes(albumId) {
     try {
-      const result = await this._cacheService.get(`album:${albumId}`);
+      const result = await this._cacheService.get(`album_likes:${albumId}`);
 
       return {
-        data: +JSON.parse(result),
-        cache: "cache",
+        data: JSON.parse(result),
+        isCache: true,
       };
     } catch (error) {
       const query = {
@@ -133,13 +144,13 @@ class AlbumServices {
       const result = await this._pool.query(query);
 
       await this._cacheService.set(
-        `album:${albumId}`,
+        `album_likes:${albumId}`,
         JSON.stringify(result.rows[0].likes)
       );
 
       return {
         data: +result.rows[0].likes,
-        cache: "no-cache",
+        isCache: false,
       };
     }
   }

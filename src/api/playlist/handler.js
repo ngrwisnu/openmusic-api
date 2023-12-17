@@ -34,9 +34,13 @@ class PlaylistHandler {
     const response = h.response({
       status: "success",
       data: {
-        playlists,
+        playlists: playlists.data,
       },
     });
+
+    if (playlists.isCache) {
+      response.header("X-Data-Source", "cache");
+    }
 
     response.code(200);
     return response;
@@ -91,9 +95,13 @@ class PlaylistHandler {
     const response = h.response({
       status: "success",
       data: {
-        playlist,
+        playlist: playlist.data,
       },
     });
+
+    if (playlist.isCache) {
+      response.header("X-Data-Source", "cache");
+    }
 
     response.code(200);
     return response;
@@ -134,8 +142,12 @@ class PlaylistHandler {
 
     const response = h.response({
       status: "success",
-      data: result,
+      data: result.data,
     });
+
+    if (result.isCache) {
+      response.header("X-Data-Source", "cache");
+    }
 
     response.code(200);
     return response;

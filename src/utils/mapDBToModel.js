@@ -11,3 +11,13 @@ export const mappedAlbumOutput = (data) => ({
   year: data.year,
   coverUrl: data.cover,
 });
+
+export const mappedSongOutput = (data) => ({
+  id: data.id,
+  title: data.title,
+  year: data.year,
+  performer: data.performer,
+  genre: data.genre,
+  duration: data.duration,
+  albumId: data.album_id,
+});
