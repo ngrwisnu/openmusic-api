@@ -39,7 +39,7 @@ const init = async () => {
   const albumServices = new AlbumServices(songServices, cacheService);
   const userServices = new UserServices();
   const authServices = new AuthServices();
-  const collabServices = new CollabServices();
+  const collabServices = new CollabServices(cacheService);
   const playlistServices = new PlaylistServices(collabServices, cacheService);
   const storageServices = new StorageServices(
     path.resolve(__dirname, "../../assets/upload/images")

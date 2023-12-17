@@ -149,7 +149,7 @@ class SongServices {
       );
 
       return {
-        data: JSON.parse(songs.rows),
+        data: songs.rows,
         isCache: false,
       };
     }

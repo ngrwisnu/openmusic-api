@@ -103,7 +103,9 @@ class PlaylistServices {
       `playlist_activities${playlistId}`,
     ]);
 
-    return await this.getPlaylistById(playlistId);
+    const playlistDetail = await this.getPlaylistById(playlistId);
+
+    return playlistDetail.data;
   }
 
   async getPlaylistSongs(playlistId) {
@@ -175,7 +177,9 @@ class PlaylistServices {
       `playlist_activities:${playlistId}`,
     ]);
 
-    return await this.getPlaylistById(playlistId);
+    const playlistDetail = await this.getPlaylistById(playlistId);
+
+    return playlistDetail.data;
   }
 
   async getPlaylistActivities(playlistId) {

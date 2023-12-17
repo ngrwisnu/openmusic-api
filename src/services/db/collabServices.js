@@ -4,8 +4,9 @@ import Postgre from "pg";
 const { Pool } = Postgre;
 
 class CollabServices {
-  constructor() {
+  constructor(cacheService) {
     this._pool = new Pool();
+    this._cacheService = cacheService;
   }
 
   async addCollaboration(playlistId, coUserId) {
@@ -22,6 +23,8 @@ class CollabServices {
     if (!result.rows.length)
       throw new InvariantError("Failed adding collaborator!");
 
+    await this._cacheService.delete(`playlists:${coUserId}`);
+
     return result.rows[0].id;
   }
 
@@ -37,6 +40,8 @@ class CollabServices {
 
     if (!result.rows.length)
       throw new InvariantError("Failed deleting collaborator!");
+
+    await this._cacheService.delete(`playlists:${coUserId}`);
 
     return details;
   }

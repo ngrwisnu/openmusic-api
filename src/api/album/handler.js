@@ -37,18 +37,16 @@ class AlbumHandler {
 
     const album = await this._service.getAlbumById(id);
 
-    console.log(album);
-
     const response = h.response({
       status: "success",
       data: {
-        album: album,
+        album: album.data,
       },
     });
 
-    // if (album.isCache) {
-    //   response.header("X-Data-Source", "cache");
-    // }
+    if (album.isCache) {
+      response.header("X-Data-Source", "cache");
+    }
 
     response.code(200);
     return response;

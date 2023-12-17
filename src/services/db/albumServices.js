@@ -33,23 +33,43 @@ class AlbumServices {
   }
 
   async getAlbumById(id) {
-    const query = {
-      text: "SELECT albums.id, albums.name, albums.year, albums.cover FROM albums WHERE id=$1",
-      values: [id],
-    };
+    try {
+      const cacheResult = await this._cacheService.get(`album:${id}`);
 
-    const album = await this._pool.query(query);
+      return {
+        data: JSON.parse(cacheResult),
+        isCache: true,
+      };
+    } catch (error) {
+      const query = {
+        text: "SELECT albums.id, albums.name, albums.year, albums.cover FROM albums WHERE id=$1",
+        values: [id],
+      };
 
-    if (!album.rows.length) throw new NotFoundError("Albums not found!");
+      const album = await this._pool.query(query);
 
-    const songs = await this._songService.getSongsByAlbumId(album.rows[0].id);
+      if (!album.rows.length) throw new NotFoundError("Albums not found!");
 
-    const mappedAlbum = mappedAlbumOutput(album.rows[0]);
+      const songs = await this._songService.getSongsByAlbumId(album.rows[0].id);
 
-    return {
-      ...album.rows[0],
-      songs,
-    };
+      const mappedAlbum = mappedAlbumOutput(album.rows[0]);
+
+      await this._cacheService.set(
+        `album:${id}`,
+        JSON.stringify({
+          ...mappedAlbum,
+          songs: songs.data,
+        })
+      );
+
+      return {
+        data: {
+          ...mappedAlbum,
+          songs: songs.data,
+        },
+        isCache: false,
+      };
+    }
   }
 
   async editAlbumById(id, { name, year }) {
@@ -132,7 +152,7 @@ class AlbumServices {
       const result = await this._cacheService.get(`album_likes:${albumId}`);
 
       return {
-        data: JSON.parse(result),
+        data: +JSON.parse(result),
         isCache: true,
       };
     } catch (error) {
